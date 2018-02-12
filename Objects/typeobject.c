@@ -2451,13 +2451,14 @@ type_new(PyTypeObject *metatype, PyObject *args, PyObject *kwds)
 	/* Debug imformation add by WY */
 	mItem3 = PyTuple_GetItem(args, 0);
 	if (PyUnicode_Check(mItem3)) {
-		str_2 = PyUnicode_AS_UNICODE(mItem3);
+		str_2 = PyUnicode_1BYTE_DATA(mItem3);				
 	}
 	else {
 		*str_2 = 'D';
 	}
 
-	if (PyUnicode_Check(mItem3) && (*str_2 == 'W') && (*(str_2+1) == 'Y') &&  (PyUnicode_WSTR_LENGTH(mItem3)==5)) {
+	//if (PyUnicode_Check(mItem3) && (*str_2 == 'W') && (*(str_2+1) == 'Y') &&  (PyUnicode_WSTR_LENGTH(mItem3)==5)) {
+	if (strcmp(str_2, str_1) == 0) {
 		WySetDbgFlag(1);
 
 		alen = PyTuple_GET_SIZE(args);

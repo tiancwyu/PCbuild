@@ -45,6 +45,7 @@ void showRunningStack(PyObject **stackNow, PyFrameObject *f)
 	PyObject **stackShow = stackNow;
 	char *nameCode = "code";
 	char *nameFunc = "function";
+	char *nameCFunc = "builtin_function_or_method";
 	PyFrameObject *mFrame = f;
 
 	printf("-------  FrameInfoStart  --------\n");
@@ -146,6 +147,20 @@ void showRunningStack(PyObject **stackNow, PyFrameObject *f)
 			}
 			printf("\n");
 		}
+		else if (strcmp(Py_TYPE(mItem)->tp_name, nameCFunc) == 0) {
+			printf("    |    CFUNC    |    stack = 0x%x, address = 0x%x, m_ml->name = ", (long)stackShow, (int)(mItem));
+			PyMethodDef *mlTmp = ((PyCFunctionObject *)mItem)->m_ml;
+			char *mStr = mlTmp->ml_name;
+			for (int i = 0; i < strlen(mStr); i++) {
+				printf("%c", mStr[i]);
+			}
+			printf(";   m_ml->doc = ");
+			char *mStr2 = mlTmp->ml_doc;
+			for (int j = 0; j < strlen(mStr2); j++) {
+				printf("%c", mStr2[j]);
+			}
+			printf("\n");
+		}
 		else {
 			printf("    |    UNKWON   |    stack = 0x%x, address = 0x%x, tp_flags = %x, name = ", (long)stackShow, (int)(mItem), mFlag);
 			for (int i = 0; (Py_TYPE(mItem)->tp_name[i]) != '\0'; i++) {
@@ -154,7 +169,7 @@ void showRunningStack(PyObject **stackNow, PyFrameObject *f)
 			printf("\n");
 		}
 	}
-	printf("    +-------------+\n");
+	printf("    +-------------+\n\n");
 }
 
 /* Private API for the LOAD_METHOD opcode. */
@@ -1212,64 +1227,8 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
 				char *str_2 = PyUnicode_1BYTE_DATA(value);
 				char *str_3 = "WYDBG";
 				if (strcmp(str_2, str_3) == 0) {
-					//WYDBG_FLAG_CE2 = 1;
-					//WYDBG_FLAG_CE3 = 0;
-					//printf("stack_pointer = 0x%x, stack_pointer-1 = 0x%x, f->f_valuestack = 0x%x\n", (int)stack_pointer, (int)(stack_pointer-1), (int)f->f_valuestack);
-					//printf("----------------Running Stack Before LOAD_CONST----------------\n");
-					//PyObject **tmpAddr = stack_pointer;
-
-					//while (tmpAddr > f->f_valuestack) {
-					//	tmpAddr = tmpAddr - 1;
-					//	PyObject *tmp = *tmpAddr;
-					//	long mFlag = Py_TYPE(tmp)->tp_flags;
-					//	if (mFlag & Py_TPFLAGS_LONG_SUBCLASS) {
-					//		printf("class of stack_pointer[0x%x] is LONG, address = 0x%x, value = 0x%x\n", (int)stack_pointer, (int)(tmp), PyLong_AsLong(tmp));
-					//	}
-					//	else if (mFlag & Py_TPFLAGS_TUPLE_SUBCLASS) {
-					//		printf("class of stack_pointer[0x%x] is TUPLE, address = 0x%x, the name of Item is: ", (int)stack_pointer, (int)(tmp));
-					//		for (int mCount2 = 0; mCount2 < PyTuple_GET_SIZE(tmp); mCount2++) {
-					//			PyObject *mItem2 = PyTuple_GetItem(tmp, mCount2);
-					//			for (int mCount3 = 0; (Py_TYPE(mItem2)->tp_name[mCount3]) != '\0'; mCount3++)
-					//			{
-					//				printf("%c", Py_TYPE(mItem2)->tp_name[mCount3]);
-					//			}
-					//			printf(",	");
-					//		}
-					//		printf("\n");
-					//	}
-					//	else if (mFlag & Py_TPFLAGS_UNICODE_SUBCLASS) {
-					//		printf("class of stack_pointer[0x%x] is UNICODE,  address = 0x%x, value = ", (int)stack_pointer, (int)(tmp));
-					//		for (int mCount2 = 0; mCount2 < PyUnicode_GET_SIZE(tmp); mCount2++) {
-					//			printf("%c", PyUnicode_AS_UNICODE(tmp)[mCount2]);
-					//		}
-					//		printf("\n");
-					//	}
-					//	else if (mFlag & Py_TPFLAGS_DICT_SUBCLASS) {
-					//		printf("class of stack_pointer[0x%x] is DICT , address = 0x%x, key: \n", (int)stack_pointer, (int)(tmp));
-					//		PyListObject *mList = PyDict_Keys(tmp);
-					//		for (int mCount2 = 0; mCount2 < PyList_Size(mList); mCount2++) {
-					//			PyObject *mItem2 = PyList_GetItem(mList, mCount2);
-					//			if (!PyUnicode_Check(mItem2)) {
-					//				printf("		key[%d] is not Unicode.\n", mCount2);
-					//			}
-					//			else {
-					//				printf("		key[%d] : ", mCount2);
-					//				for (int mCount3 = 0; mCount3 < PyUnicode_GET_SIZE(mItem2); mCount3++) {
-					//					printf("%c", PyUnicode_AS_UNICODE(mItem2)[mCount3]);
-					//				}
-					//				printf("\n");
-					//			}
-					//		}
-					//	}
-					//	else {
-					//		printf("tp_flags = %x, tp_name = ", mFlag);
-					//		for (int i = 0; (Py_TYPE(tmp)->tp_name[i]) != '\0'; i++) {
-					//			printf("%c", Py_TYPE(tmp)->tp_name[i]);
-					//		}
-					//		printf("\n");
-					//	}
-					//}
-					//printf("----------------Running Stack Before LOAD_CONST----------------\n");
+					WYDBG_FLAG_CE2 = 1;
+					WYDBG_FLAG_CE3 = 0;
 					showRunningStack(stack_pointer, f);
 				}
 			}
@@ -3359,16 +3318,9 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
             PyObject **sp, *res;
             sp = stack_pointer;
 			if (WYDBG_FLAG_CE4 == 1) {
-				for (int i = 1; i < 4; i++) {
-					PyObject **sptmp = sp - i;
-					printf("CALL_FUNCTION : *sp - %d adr is 0x%x,  0x%x\n", i,(int)(*sptmp), (int)(sptmp));
-					for (int mCount22 = 0; (Py_TYPE(*sptmp)->tp_name[mCount22]) != '\0'; mCount22++)
-					{
-						printf("%c", Py_TYPE(*sptmp)->tp_name[mCount22]);
-					}
-					printf("\n");
-				}
-				WYDBG_FLAG_CE4 = 0;
+				showRunningStack(stack_pointer, f);
+				printf("CALL_FUNCTION : before call_function, sp = 0x%x, oparg = 0x%x\n", (int)sp, oparg);
+				//WYDBG_FLAG_CE4 = 0;
 			}
 
 			res = call_function(&sp, oparg, NULL);
@@ -3432,6 +3384,8 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
 				}
 				WYDBG_FLAG_CE = 0;
 			}
+			
+			WYDBG_FLAG_CE4 = 0;
 			
             stack_pointer = sp;
             PUSH(res);

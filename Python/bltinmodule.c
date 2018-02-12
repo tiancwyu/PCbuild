@@ -152,6 +152,21 @@ builtin___build_class__(PyObject *self, PyObject *const *args, Py_ssize_t nargs,
         return NULL;
     }
     orig_bases = _PyStack_AsTupleSlice(args, nargs, 2, nargs);
+
+	if(WYDBG_FLAG_CE4 == 1){
+		printf("--------builtin___build_class__----------\nnargs = %d\n", nargs);
+		for (int i = 0; i < PyTuple_GET_SIZE(orig_bases); i++) {
+			printf("NAME of orig_bases[%d] = ", i);
+			PyObject *mItem2 = PyTuple_GetItem(orig_bases, i);
+			for (int j = 0; (Py_TYPE(mItem2)->tp_name[j]) != '\0'; j++)
+			{
+				printf("%c", Py_TYPE(mItem2)->tp_name[j]);
+			}
+			printf("\n");
+		}
+		printf("\n");
+	}
+	
     if (orig_bases == NULL)
         return NULL;
 
